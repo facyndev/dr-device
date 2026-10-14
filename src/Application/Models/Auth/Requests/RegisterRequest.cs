@@ -4,9 +4,13 @@ namespace Application.Models.Auth.Requests;
 
 public record RegisterRequest
 {
-    [Required(ErrorMessage = "El nombre completo no puede estar vacío.")]
-    [StringLength(150, MinimumLength = 3, ErrorMessage = "El nombre debe tener entre 3 y 150 caracteres.")]
-    public string FullName { get; init; } = string.Empty;
+    [Required(ErrorMessage = "El nombre no puede estar vacío.")]
+    [StringLength(100, MinimumLength = 3, ErrorMessage = "El nombre debe tener entre 3 y 100 caracteres.")]
+    public string FirstName { get; init; } = string.Empty;
+
+    [Required(ErrorMessage = "El apellido no puede estar vacío.")]
+    [StringLength(100, MinimumLength = 3, ErrorMessage = "El apellido debe tener entre 3 y 100 caracteres.")]
+    public string LastName { get; init; } = string.Empty;
 
     [Required(ErrorMessage = "El correo electrónico no puede estar vacío.")]
     [EmailAddress(ErrorMessage = "El correo electrónico no es válido.")]

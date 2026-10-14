@@ -29,14 +29,14 @@ public class User
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void SetFullName(string firstName, string lastName)
+    public void UpdateFullName(string firstName, string lastName)
     {
         FirstName = firstName;
         LastName = lastName;
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void SetPhone(string phone)
+    public void UpdatePhone(string phone)
     {
         Phone = phone;
         UpdatedAt = DateTime.UtcNow;

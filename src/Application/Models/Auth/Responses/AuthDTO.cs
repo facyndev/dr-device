@@ -4,6 +4,7 @@ public record AuthDTO(
     string Token,
     Guid UserId,
     string Email,
-    string FullName,
+    string FirstName,
+    string LastName,
     string Role
 );
