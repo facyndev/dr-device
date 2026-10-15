@@ -1,3 +1,5 @@
+using Domain.Enums;
+
 namespace Domain.Entities;
 
 public class User
@@ -11,6 +13,7 @@ public class User
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime? DeletedAt { get; private set; }
+    public UserRoles Role { get; private set; } = UserRoles.Customer;
 
     protected User() { }
 
@@ -57,6 +60,15 @@ public class User
     public void Restore()
     {
         DeletedAt = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void ChangeRole(UserRoles newRole)
+    {
+        if(newRole == Role)
+            throw new InvalidOperationException("El rol que intentas asignar es idéntico al actual.");
+
+        Role = newRole;
         UpdatedAt = DateTime.UtcNow;
     }
 }
