@@ -3,14 +3,20 @@ using Microsoft.IdentityModel.Tokens;
 using Infrastructure.Data;
 using Infrastructure.Services;
 using Domain.Interfaces;
+using Application.Interfaces;
+using Application.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllers();
+
+// Contenedor de inyección de dependencias
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IHasher, BcryptHasher>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));

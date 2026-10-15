@@ -2,7 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Domain.Entities;
-using Domain.Interfaces;
+using Application.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
@@ -18,9 +18,9 @@ public class JwtService : IJwtService
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
-        _issuer = GetRequiredSetting(configuration, "Authentication:Issuer");
-        _audience = GetRequiredSetting(configuration, "Authentication:Audience");
-        var secret = GetRequiredSetting(configuration, "Authentication:SecretForKey");
+        _issuer = GetRequiredConfiguration(configuration, "Authentication:Issuer");
+        _audience = GetRequiredConfiguration(configuration, "Authentication:Audience");
+        var secret = GetRequiredConfiguration(configuration, "Authentication:SecretForKey");
         var keyBytes = Encoding.UTF8.GetBytes(secret);
 
         if (keyBytes.Length < 32)
@@ -49,9 +49,9 @@ public class JwtService : IJwtService
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName),
-            new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName),
-            new Claim(ClaimTypes.Role, role)
+            new Claim("first_name", user.FirstName),
+            new Claim("last_name", user.LastName),
+            new Claim("role", role)
         };
 
         var token = new JwtSecurityToken(
@@ -62,7 +62,7 @@ public class JwtService : IJwtService
             expires: now.Add(lifetime),
             signingCredentials: new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256));
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return new JwtSecurityTokenHandler().WriteToken(token); 
     }
 
     public bool ValidateToken(string token)
@@ -102,7 +102,7 @@ public class JwtService : IJwtService
         }
     }
 
-    private static string GetRequiredSetting(IConfiguration configuration, string key)
+    private static string GetRequiredConfiguration(IConfiguration configuration, string key)
     {
         var value = configuration[key];
         if (string.IsNullOrWhiteSpace(value))
