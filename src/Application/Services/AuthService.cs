@@ -2,6 +2,7 @@ using Application.Interfaces;
 using Application.Models.Auth.Requests;
 using Application.Models.Auth.Responses;
 using Domain.Entities;
+using Domain.Enums;
 using Domain.Interfaces;
 
 namespace Application.Services;
@@ -21,13 +22,24 @@ public class AuthService : IAuthService
 
     public async Task<AuthDTO> RegisterAsync(RegisterRequest request)
     {
+        var targetRole = request.Role ?? UserRoles.Customer;
+
+        if (targetRole != UserRoles.Customer && targetRole != UserRoles.Technician)
+            throw new Domain.Exceptions.ValidationException("El rol ingresado no es válido.");
+
         var existing = await _userRepository.GetByEmail(request.Email);
         if (existing is not null)
             throw new Domain.Exceptions.ConflictException("Ya existe un usuario con ese correo electrónico.");
 
         var passwordHash = _hasher.Hash(request.Password);
 
-        var user = new User(request.FirstName, request.LastName, request.Email, passwordHash, request.Phone);
+        var user = new User(
+            request.FirstName,
+            request.LastName,
+            request.Email,
+            passwordHash,
+            request.Phone,
+            targetRole);
 
         await _userRepository.Create(user);
 
