@@ -7,6 +7,7 @@ using Application.Interfaces;
 using Application.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
+using Presentation.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +45,8 @@ builder.Services.AddAuthentication("Bearer")
     });
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
