@@ -1,3 +1,5 @@
+using Domain.Enums;
+
 namespace Domain.Entities;
 
 public class User
@@ -8,19 +10,21 @@ public class User
     public string Email { get; private set; } = string.Empty;
     public string Password { get; private set; } = string.Empty;
     public string? Phone { get; private set; }
+    public UserRoles Role { get; private set; }
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime? DeletedAt { get; private set; }
 
     protected User() { }
 
-    public User(string firstName, string lastName, string email, string passwordHash, string? phone = null)
+    public User(string firstName, string lastName, string email, string passwordHash, string? phone = null, UserRoles role = UserRoles.Customer)
     {
         FirstName = firstName;
         LastName = lastName;
         Email = email;
         Password = passwordHash;
         Phone = phone;
+        Role = role;
     }
 
     public void UpdatePassword(string passwordHash)
@@ -57,6 +61,15 @@ public class User
     public void Restore()
     {
         DeletedAt = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void ChangeRole(UserRoles newRole)
+    {
+        if(newRole == Role)
+            throw new InvalidOperationException("El rol que intentas asignar es idéntico al actual.");
+
+        Role = newRole;
         UpdatedAt = DateTime.UtcNow;
     }
 }

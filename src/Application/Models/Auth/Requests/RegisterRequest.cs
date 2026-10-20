@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Domain.Enums;
 
 namespace Application.Models.Auth.Requests;
 
@@ -25,5 +26,6 @@ public record RegisterRequest
     public string? Phone { get; init; }
 
     [Required(ErrorMessage = "El rol no puede estar vacío.")]
-    public Guid RoleId { get; init; }
+    [EnumDataType(typeof(UserRoles), ErrorMessage = "El rol ingresado no es válido.")]
+    public UserRoles? Role { get; init; }
 }
