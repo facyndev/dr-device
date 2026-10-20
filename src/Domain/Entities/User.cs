@@ -33,22 +33,13 @@ public class User
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void UpdateFullName(string firstName, string lastName)
+    public void Update(string firstName, string lastName, string email, string? phone, UserRoles role)
     {
         FirstName = firstName;
         LastName = lastName;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void UpdatePhone(string phone)
-    {
-        Phone = phone;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void UpdateEmail(string email)
-    {
         Email = email;
+        Phone = phone;
+        Role = role;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -64,12 +55,4 @@ public class User
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void ChangeRole(UserRoles newRole)
-    {
-        if(newRole == Role)
-            throw new InvalidOperationException("El rol que intentas asignar es idéntico al actual.");
-
-        Role = newRole;
-        UpdatedAt = DateTime.UtcNow;
-    }
 }
