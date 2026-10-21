@@ -32,6 +32,8 @@ builder.Services.AddScoped<IHasher, BcryptHasher>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
 builder.Services.AddScoped<ITransactionManager, TransactionManager>();
+builder.Services.AddScoped<ICurrentUserSession, CurrentUserSession>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -61,8 +63,7 @@ builder.Services.AddAuthentication("Bearer")
         {
             OnMessageReceived = context =>
             {
-                if (string.IsNullOrEmpty(context.Request.Headers.Authorization))
-                    context.Token = context.Request.Cookies[CookieConstants.AccessToken];
+                context.Token = context.Request.Cookies[CookieConstants.AccessToken];
                 return Task.CompletedTask;
             }
         };
