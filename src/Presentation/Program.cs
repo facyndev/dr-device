@@ -11,6 +11,11 @@ using Presentation.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configuración de logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
 builder.Services.AddControllers();
 
 // Contenedor de inyección de dependencias
