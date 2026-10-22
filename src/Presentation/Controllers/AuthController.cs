@@ -12,7 +12,6 @@ namespace Presentation.Controllers;
 [Route("api/[controller]")]
 public class AuthController(IAuthService authService, IHostEnvironment environment) : ControllerBase
 {
-    [AllowAnonymous]
     [EnableRateLimiting("password-reset")]
     [HttpPost("forgot-password")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -26,7 +25,6 @@ public class AuthController(IAuthService authService, IHostEnvironment environme
         return Ok(new { token });
     }
 
-    [AllowAnonymous]
     [EnableRateLimiting("password-reset")]
     [HttpPost("reset-password")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -50,7 +48,6 @@ public class AuthController(IAuthService authService, IHostEnvironment environme
         return NoContent();
     }
 
-    [AllowAnonymous]
     [HttpPost("logout")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public IActionResult Logout()
@@ -66,7 +63,6 @@ public class AuthController(IAuthService authService, IHostEnvironment environme
         return NoContent();
     }
 
-    [AllowAnonymous]
     [HttpPost("login")]
     [ProducesResponseType(typeof(UserDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
