@@ -1,10 +1,22 @@
+using Domain.Exceptions;
+
 namespace Domain.Entities;
 
 public class Specialization
 {
-    public Guid Id { get; private set; } = Guid.NewGuid();
     public Guid UserId { get; private set; }
     public Guid CategoryId { get; private set; }
-    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
+
+    protected Specialization() { }
+
+    public Specialization(Guid userId, Guid categoryId)
+    {
+        if (userId == Guid.Empty)
+            throw new ValidationException("La especialización debe vincularse a un técnico.");
+        if (categoryId == Guid.Empty)
+            throw new ValidationException("La especialización debe vincularse a una categoría.");
+
+        UserId = userId;
+        CategoryId = categoryId;
+    }
 }

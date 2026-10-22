@@ -37,13 +37,7 @@ public class AuthController(IAuthService authService, IHostEnvironment environme
             return NotFound();
 
         await authService.ResetPasswordAsync(request);
-        Response.Cookies.Delete(CookieConstants.AccessToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Path = "/"
-        });
+        Response.Cookies.Delete(CookieConstants.AccessToken, CreateCookieOptions());
         Response.Headers.CacheControl = "no-store";
         return NoContent();
     }
@@ -52,13 +46,7 @@ public class AuthController(IAuthService authService, IHostEnvironment environme
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public IActionResult Logout()
     {
-        Response.Cookies.Delete(CookieConstants.AccessToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Path = "/"
-        });
+        Response.Cookies.Delete(CookieConstants.AccessToken, CreateCookieOptions());
         Response.Headers.CacheControl = "no-store";
         return NoContent();
     }
@@ -70,15 +58,7 @@ public class AuthController(IAuthService authService, IHostEnvironment environme
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var user = await authService.LoginAsync(request);
-        Response.Cookies.Append(CookieConstants.AccessToken, user.AccessToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Path = "/",
-            MaxAge = TimeSpan.FromDays(1),
-            Expires = DateTimeOffset.UtcNow.AddDays(1)
-        });
+        Response.Cookies.Append(CookieConstants.AccessToken, user.AccessToken, CreateCookieOptions(TimeSpan.FromDays(1)));
         Response.Headers.CacheControl = "no-store";
         return Ok(user);
     }
@@ -90,16 +70,18 @@ public class AuthController(IAuthService authService, IHostEnvironment environme
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         var user = await authService.RegisterAsync(request);
-        Response.Cookies.Append(CookieConstants.AccessToken, user.AccessToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Path = "/",
-            MaxAge = TimeSpan.FromDays(1),
-            Expires = DateTimeOffset.UtcNow.AddDays(1)
-        });
+        Response.Cookies.Append(CookieConstants.AccessToken, user.AccessToken, CreateCookieOptions(TimeSpan.FromDays(1)));
         Response.Headers.CacheControl = "no-store";
         return StatusCode(StatusCodes.Status201Created, user);
     }
+
+    private CookieOptions CreateCookieOptions(TimeSpan? maxAge = null) => new()
+    {
+        HttpOnly = true,
+        Secure = Request.IsHttps,
+        SameSite = SameSiteMode.Lax,
+        Path = "/",
+        MaxAge = maxAge,
+        Expires = maxAge.HasValue ? DateTimeOffset.UtcNow.Add(maxAge.Value) : null
+    };
 }
