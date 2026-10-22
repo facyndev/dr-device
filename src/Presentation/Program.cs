@@ -58,14 +58,41 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddAuthentication("Bearer")
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
     .AddJwtBearer(options =>
     { 
+        options.MapInboundClaims = false;
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
             {
-                context.Token = context.Request.Cookies[CookieConstants.AccessToken];
+                if (context.Request.Cookies.TryGetValue(CookieConstants.AccessToken, out var token))
+                {
+                    context.Token = token;
+                }
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                var claims = string.Join(", ", context.Principal?.Claims.Select(c => $"{c.Type}={c.Value}") ?? []);
+                logger.LogInformation("JWT Validado exitosamente. Claims: [{Claims}]. IsInRole('Technician'): {IsInRole}", claims, context.Principal?.IsInRole("Technician"));
+                return Task.CompletedTask;
+            },
+            OnAuthenticationFailed = context =>
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                logger.LogWarning("Fallo de autenticación JWT: {Message}", context.Exception.Message);
+                return Task.CompletedTask;
+            },
+            OnChallenge = context =>
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                logger.LogWarning("JWT OnChallenge activado: Error={Error}, Descripción={Description}", context.Error, context.ErrorDescription);
                 return Task.CompletedTask;
             }
         };
@@ -78,7 +105,9 @@ builder.Services.AddAuthentication("Bearer")
             RequireSignedTokens = true,
             RequireExpirationTime = true,
             ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 },
-            ClockSkew = TimeSpan.Zero,
+            ClockSkew = TimeSpan.FromMinutes(1),
+            RoleClaimType = "role",
+            NameClaimType = "sub",
             ValidIssuer = builder.Configuration["Authentication:Issuer"], 
             ValidAudience = builder.Configuration["Authentication:Audience"], 
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Authentication:SecretForKey"]!))
