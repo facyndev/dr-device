@@ -1,5 +1,8 @@
+using Application.Models.Users.Responses;
+
 namespace Application.Models.Auth.Responses;
 
-public record AuthDTO(
-    string Token
+public sealed record AuthDTO(
+    string AccessToken,
+    UserDTO User
 );

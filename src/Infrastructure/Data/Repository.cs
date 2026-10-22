@@ -25,7 +25,7 @@ public class Repository<T> : IRepository<T> where T : class
         return await _dbSet.FindAsync(id);
     }
 
-    public async Task<T> Create(T entity)
+    public virtual async Task<T> Create(T entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
         _dbSet.Add(entity);
@@ -33,7 +33,7 @@ public class Repository<T> : IRepository<T> where T : class
         return entity;
     }
 
-    public async Task Update(T entity)
+    public virtual async Task Update(T entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
         _dbSet.Update(entity);

@@ -4,3 +4,25 @@ GET {{Presentation_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+# Solo Development: devuelve el token directamente, sin enviar correos.
+POST {{Presentation_HostAddress}}/api/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "usuario@example.com"
+}
+
+###
+
+# Copiar el token de la respuesta anterior y usarlo dentro de los 10 minutos.
+POST {{Presentation_HostAddress}}/api/auth/reset-password
+Content-Type: application/json
+
+{
+  "token": "REEMPLAZAR_POR_EL_TOKEN_DE_LA_RESPUESTA",
+  "newPassword": "nueva-password",
+  "confirmPassword": "nueva-password"
+}
+
+###

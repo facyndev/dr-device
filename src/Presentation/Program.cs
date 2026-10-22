@@ -8,6 +8,9 @@ using Application.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using Presentation.Middlewares;
+using Presentation.Constants;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +20,7 @@ builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
 builder.Services.AddControllers();
+builder.Services.AddAuthorization();
 
 // Contenedor de inyección de dependencias
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -25,6 +29,26 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IHasher, BcryptHasher>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+builder.Services.AddScoped<ITransactionManager, TransactionManager>();
+builder.Services.AddScoped<ICurrentUserSession, CurrentUserSession>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("password-reset", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            // maximo de peticiones permitidas por ventana de tiempo
+            PermitLimit = 5,
+            // ventana de tiempo en la que se permite un maximo de peticiones
+            Window = TimeSpan.FromMinutes(15),
+            // cantidad de peticiones que se pueden agrupar en una cola mientras se espera a que se libere espacio en la ventana de tiempo
+            QueueLimit = 0
+        }));
+});
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -35,6 +59,14 @@ builder.Services.AddOpenApi();
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer(options =>
     { 
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                context.Token = context.Request.Cookies[CookieConstants.AccessToken];
+                return Task.CompletedTask;
+            }
+        };
         options.TokenValidationParameters = new TokenValidationParameters 
         { 
             ValidateIssuer = true, 
@@ -62,6 +94,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseRouting();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
