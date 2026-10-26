@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Application.Interfaces;
 using Application.Models.Auth.Requests;
 using Application.Models.Users.Responses;
-using Microsoft.AspNetCore.Authorization;
 using Presentation.Constants;
 using Microsoft.AspNetCore.RateLimiting;
 

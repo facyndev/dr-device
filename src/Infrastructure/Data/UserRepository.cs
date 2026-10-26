@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Domain.Exceptions;
@@ -34,6 +34,13 @@ public class UserRepository : Repository<User>, IUserRepository
         if (user is not null)
             await _applicationDbcontext.Entry(user).ReloadAsync();
         return user;
+    }
+
+    public async Task<bool> HasOrdersOrOffersAsync(Guid userId)
+    {
+        return await _applicationDbcontext.Orders.AnyAsync(order =>
+                   order.UserId == userId || order.TechnicianId == userId)
+            || await _applicationDbcontext.Offers.AnyAsync(offer => offer.TechnicianId == userId);
     }
 
     public override async Task<User> Create(User entity)
