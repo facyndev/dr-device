@@ -36,6 +36,44 @@ public class UserRepository : Repository<User>, IUserRepository
         return user;
     }
 
+    public async Task<bool> HasOrdersOrOffersAsync(Guid userId)
+    {
+        return await _applicationDbcontext.Orders.AnyAsync(order =>
+                   order.UserId == userId || order.TechnicianId == userId)
+            || await _applicationDbcontext.Offers.AnyAsync(offer => offer.TechnicianId == userId);
+    }
+
+    public Task<int> DeleteExpiredBatchAsync(
+        DateTime cutoffUtc, int batchSize, CancellationToken cancellationToken = default)
+    {
+        if (cutoffUtc.Kind != DateTimeKind.Utc)
+            throw new ArgumentException("La fecha de corte debe estar en UTC.", nameof(cutoffUtc));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(batchSize);
+
+        // Una sola sentencia evita una ventana entre la selección y el borrado.
+        // SKIP LOCKED permite omitir cuentas que estén siendo reactivadas o procesadas.
+        // El historial se conserva: las FK de órdenes y ofertas usan Restrict.
+        return _applicationDbcontext.Database.ExecuteSqlInterpolatedAsync($"""
+            WITH candidates AS (
+                SELECT u."Id"
+                FROM "Users" AS u
+                WHERE u."DeletedAt" IS NOT NULL AND u."DeletedAt" <= {cutoffUtc}
+                  AND NOT EXISTS (
+                      SELECT 1 FROM "Orders" AS o
+                      WHERE o."UserId" = u."Id" OR o."TechnicianId" = u."Id")
+                  AND NOT EXISTS (
+                      SELECT 1 FROM "Offers" AS o WHERE o."TechnicianId" = u."Id")
+                ORDER BY u."DeletedAt", u."Id"
+                LIMIT {batchSize}
+                FOR UPDATE OF u SKIP LOCKED
+            )
+            DELETE FROM "Users" AS u
+            USING candidates AS c
+            WHERE u."Id" = c."Id"
+              AND u."DeletedAt" IS NOT NULL AND u."DeletedAt" <= {cutoffUtc}
+            """, cancellationToken);
+    }
+
     public override async Task<User> Create(User entity)
     {
         try
