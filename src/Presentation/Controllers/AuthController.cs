@@ -63,6 +63,7 @@ public class AuthController(IAuthService authService, IHostEnvironment environme
     }
 
     [HttpPost("register")]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     [ProducesResponseType(typeof(UserDTO), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]

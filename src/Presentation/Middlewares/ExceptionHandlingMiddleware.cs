@@ -34,6 +34,7 @@ public class ExceptionHandlingMiddleware
 
         var (statusCode, message) = exception switch
         {
+            ExternalServiceException => (HttpStatusCode.ServiceUnavailable, exception.Message),
             NotFoundException => (HttpStatusCode.NotFound, exception.Message),
             ConflictException => (HttpStatusCode.Conflict, exception.Message),
             ValidationException => (HttpStatusCode.BadRequest, exception.Message),
