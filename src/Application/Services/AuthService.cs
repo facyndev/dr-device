@@ -18,9 +18,11 @@ public class AuthService : IAuthService
     private readonly IPasswordResetTokenRepository _passwordResetTokens;
     private readonly TimeProvider _clock;
     private readonly ITransactionManager _transactions;
+    private readonly IAddressService _addressService;
 
     public AuthService(IUserRepository userRepository, IJwtService jwtService, IHasher hasher,
-        IPasswordResetTokenRepository passwordResetTokens, TimeProvider clock, ITransactionManager transactions)
+        IPasswordResetTokenRepository passwordResetTokens, TimeProvider clock, ITransactionManager transactions,
+        IAddressService addressService)
     {
         _userRepository = userRepository;
         _jwtService = jwtService;
@@ -28,6 +30,7 @@ public class AuthService : IAuthService
         _passwordResetTokens = passwordResetTokens;
         _clock = clock;
         _transactions = transactions;
+        _addressService = addressService;
     }
 
     public async Task<AuthDTO> RegisterAsync(RegisterRequest request)
@@ -41,6 +44,7 @@ public class AuthService : IAuthService
         if (existing is not null)
             throw new Domain.Exceptions.ConflictException("Ya existe un usuario con ese correo electrónico.");
 
+        var address = await _addressService.ValidateAsync(request.Address, request.Province, request.Locality);
         var passwordHash = _hasher.Hash(request.Password);
 
         var user = new User(
@@ -51,13 +55,15 @@ public class AuthService : IAuthService
             request.Phone,
             targetRole);
 
+        user.SetAddress(address.Address, address.Location);
+
         await _userRepository.Create(user);
 
         var token = _jwtService.GenerateToken(user, user.Role.ToString());
         
         var userDTO = new UserDTO(
             user.Id, user.FirstName, user.LastName, user.Email, user.Phone,
-            user.Role, user.CreatedAt, user.UpdatedAt);
+            user.Role, user.CreatedAt, user.UpdatedAt, user.Address, user.Location);
 
         return new AuthDTO(
             token,
@@ -84,7 +90,7 @@ public class AuthService : IAuthService
         
         var userDTO = new UserDTO(
             user.Id, user.FirstName, user.LastName, user.Email, user.Phone,
-            user.Role, user.CreatedAt, user.UpdatedAt);
+            user.Role, user.CreatedAt, user.UpdatedAt, user.Address, user.Location);
 
         return new AuthDTO(
             token,

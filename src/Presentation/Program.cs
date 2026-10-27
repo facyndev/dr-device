@@ -43,6 +43,11 @@ builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepo
 builder.Services.AddScoped<ITransactionManager, TransactionManager>();
 builder.Services.AddScoped<ICurrentUserSession, CurrentUserSession>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpClient<IAddressService, GeorefAddressService>(client =>
+{
+    client.BaseAddress = new Uri("https://apis.datos.gob.ar/georef/api/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;

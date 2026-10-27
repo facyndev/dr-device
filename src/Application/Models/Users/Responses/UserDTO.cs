@@ -1,4 +1,5 @@
 using Domain.Enums;
+using Domain.Entities;
 
 namespace Application.Models.Users.Responses;
 
@@ -10,5 +11,7 @@ public record UserDTO(
     string? Phone,
     UserRoles Role,
     DateTime CreatedAt,
-    DateTime UpdatedAt
+    DateTime UpdatedAt,
+    string? Address,
+    Location? Location
 );

@@ -11,6 +11,13 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
     public void Configure(EntityTypeBuilder<User> builder)
     {
+        builder.Property(user => user.Address).HasMaxLength(500);
+        builder.OwnsOne(user => user.Location, location =>
+        {
+            location.Property(value => value.Latitude).HasColumnName("Latitude").IsRequired();
+            location.Property(value => value.Longitude).HasColumnName("Longitude").IsRequired();
+        });
+
         builder.Property<string>(NormalizedEmail)
             .HasComputedColumnSql("lower(\"Email\")", stored: true);
 

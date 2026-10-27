@@ -10,6 +10,8 @@ public class User
     public string Email { get; private set; } = string.Empty;
     public string Password { get; private set; } = string.Empty;
     public string? Phone { get; private set; }
+    public string? Address { get; private set; }
+    public Location? Location { get; private set; }
     public UserRoles Role { get; private set; }
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
@@ -30,6 +32,16 @@ public class User
     public void UpdatePassword(string passwordHash)
     {
         Password = passwordHash;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetAddress(string address, Location location)
+    {
+        if (string.IsNullOrWhiteSpace(address) || address.Length > 500)
+            throw new Domain.Exceptions.ValidationException("La dirección no es válida.");
+        ArgumentNullException.ThrowIfNull(location);
+        Address = address.Trim();
+        Location = location;
         UpdatedAt = DateTime.UtcNow;
     }
 
