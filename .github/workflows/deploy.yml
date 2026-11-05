@@ -32,6 +32,9 @@ jobs:
     # Se despliega automáticamente solo cuando hay un push a main
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://dr-device-api-production.up.railway.app
 
     steps:
       - name: Checkout repository
