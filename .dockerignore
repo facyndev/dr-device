@@ -1,0 +1,14 @@
+**/.git
+**/.github
+**/.vs
+**/.idea
+**/.vscode
+**/.agents
+**/bin
+**/obj
+**/TestResults
+**/*.user
+**/*.suo
+**/Dockerfile*
+**/docker-compose*
+**/README.md
