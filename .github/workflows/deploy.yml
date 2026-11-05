@@ -1,0 +1,46 @@
+name: CI/CD Pipeline - Railway
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  build-and-test:
+    name: Build & Verify (.NET 10)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore dr-device.slnx
+
+      - name: Build solution
+        run: dotnet build dr-device.slnx --configuration Release --no-restore
+
+  deploy:
+    name: Deploy to Railway
+    needs: build-and-test
+    # Se despliega automáticamente solo cuando hay un push a main
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+
+      - name: Deploy to Railway
+        run: railway up --service "${{ secrets.RAILWAY_SERVICE || '' }}" --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

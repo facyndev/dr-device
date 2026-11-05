@@ -1,9 +1,22 @@
 using System.ComponentModel.DataAnnotations;
+using Domain.Enums;
 
 namespace Application.Models.Auth.Requests;
 
 public record RegisterRequest
 {
+    [Required(ErrorMessage = "La dirección no puede estar vacía.")]
+    [MaxLength(500)]
+    public string Address { get; init; } = string.Empty;
+
+    [Required(ErrorMessage = "La provincia no puede estar vacía.")]
+    [MaxLength(100)]
+    public string Province { get; init; } = string.Empty;
+
+    [Required(ErrorMessage = "La localidad no puede estar vacía.")]
+    [MaxLength(150)]
+    public string Locality { get; init; } = string.Empty;
+
     [Required(ErrorMessage = "El nombre no puede estar vacío.")]
     [StringLength(100, MinimumLength = 3, ErrorMessage = "El nombre debe tener entre 3 y 100 caracteres.")]
     public string FirstName { get; init; } = string.Empty;
@@ -25,5 +38,6 @@ public record RegisterRequest
     public string? Phone { get; init; }
 
     [Required(ErrorMessage = "El rol no puede estar vacío.")]
-    public Guid RoleId { get; init; }
+    [EnumDataType(typeof(UserRoles), ErrorMessage = "El rol ingresado no es válido.")]
+    public UserRoles? Role { get; init; }
 }

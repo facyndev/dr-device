@@ -1,3 +1,5 @@
+using Domain.Enums;
+
 namespace Domain.Entities;
 
 public class User
@@ -8,19 +10,23 @@ public class User
     public string Email { get; private set; } = string.Empty;
     public string Password { get; private set; } = string.Empty;
     public string? Phone { get; private set; }
+    public string? Address { get; private set; }
+    public Location? Location { get; private set; }
+    public UserRoles Role { get; private set; }
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime? DeletedAt { get; private set; }
 
     protected User() { }
 
-    public User(string firstName, string lastName, string email, string passwordHash, string? phone = null)
+    public User(string firstName, string lastName, string email, string passwordHash, string? phone = null, UserRoles role = UserRoles.Customer)
     {
         FirstName = firstName;
         LastName = lastName;
         Email = email;
         Password = passwordHash;
         Phone = phone;
+        Role = role;
     }
 
     public void UpdatePassword(string passwordHash)
@@ -29,22 +35,23 @@ public class User
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void UpdateFullName(string firstName, string lastName)
+    public void SetAddress(string address, Location location)
+    {
+        if (string.IsNullOrWhiteSpace(address) || address.Length > 500)
+            throw new Domain.Exceptions.ValidationException("La dirección no es válida.");
+        ArgumentNullException.ThrowIfNull(location);
+        Address = address.Trim();
+        Location = location;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Update(string firstName, string lastName, string email, string? phone, UserRoles role)
     {
         FirstName = firstName;
         LastName = lastName;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void UpdatePhone(string phone)
-    {
-        Phone = phone;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void UpdateEmail(string email)
-    {
         Email = email;
+        Phone = phone;
+        Role = role;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -59,4 +66,5 @@ public class User
         DeletedAt = null;
         UpdatedAt = DateTime.UtcNow;
     }
+
 }
