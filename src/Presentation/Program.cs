@@ -128,6 +128,14 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
+// Aplicar migraciones pendientes automáticamente sólo en modo producción
+if (app.Environment.IsProduction())
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate();
+}
+
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
