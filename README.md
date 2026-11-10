@@ -10,16 +10,15 @@ La solución sigue los principios de Clean Architecture (arquitectura limpia), s
 
 ### Stack tecnológico
 
-- **Plataforma y lenguaje:** .NET 10 (`net10.0`) y C# 13.
+- **Plataforma y lenguaje:** .NET 10 (`net10.0`) 
 - **Framework web:** ASP.NET Core Web API.
-- **Acceso a datos y ORM:** Entity Framework Core 10 con proveedor `Npgsql.EntityFrameworkCore.PostgreSQL`.
+- **Acceso a datos y ORM:** Entity Framework Core 10
 - **Base de datos:** PostgreSQL.
-- **Autenticación y autorización:** JWT (JSON Web Tokens) firmados con HMAC SHA-256 (`Microsoft.AspNetCore.Authentication.JwtBearer`), transportados de forma segura mediante cookies `HttpOnly` (`access_token`).
-- **Seguridad de contraseñas:** BCrypt (`BCrypt.Net-Next`) para hash y verificación de credenciales.
-- **Procesamiento en segundo plano:** Quartz.NET (`Quartz.Extensions.Hosting`) para tareas programadas de depuración periódica de usuarios (`UserCleanupJob`).
-- **Control de tráfico (rate limiting):** `Microsoft.AspNetCore.RateLimiting` con particionamiento por IP para mitigar abusos en recuperación de contraseñas.
+- **Autenticación y autorización:** JWT (JSON Web Tokens) firmados con HMAC SHA-256, transportados de forma segura mediante cookies `HttpOnly` (`access_token`).
+- **Seguridad de contraseñas:** BCrypt para hash y verificación de credenciales.
+- **Procesamiento en segundo plano:** [Quartz.NET](http://Quartz.NET) para tareas programadas de depuración periódica de usuarios.
+- **Control de tráfico (rate limiting):** con particionamiento por IP para mitigar abusos en recuperación de contraseñas.
 - **Integraciones externas:** Cliente HTTP tipado contra la API pública de Georef (`apis.datos.gob.ar`) para normalización y geocodificación de domicilios.
-- **Especificación de API:** `Microsoft.AspNetCore.OpenApi` nativo de .NET 10.
 - **Contenedores y despliegue:** Dockerfile multi-etapa optimizado para despliegues en Railway y pipeline de CI/CD en GitHub Actions.
 
 ---
@@ -30,15 +29,11 @@ Para compilar y ejecutar este proyecto en tu entorno local necesitás:
 
 1. **.NET 10 SDK** (versión 10.0.x o superior).
    - Verificá la instalación con:
-     ```bash
-     dotnet --version
-     ```
 2. **PostgreSQL** (versión 15 o superior) en ejecución local o mediante contenedor Docker.
 3. **Herramienta global de Entity Framework Core CLI:**
    ```bash
-   dotnet tool install --global dotnet-ef
+     dotnet tool install --global dotnet-ef
    ```
-   *(Si ya la tenías instalada, podés actualizarla con `dotnet tool update --global dotnet-ef`).*
 4. **Git** para clonar el repositorio.
 5. *(Opcional)* **Docker** si deseás levantar PostgreSQL en contenedor o probar la imagen productiva localmente.
 
@@ -59,18 +54,20 @@ ASP.NET Core utiliza una jerarquía de proveedores donde cada fuente sobreescrib
 
 A continuación se detallan todas las variables leídas por el código fuente en `Program.cs`, `JwtService.cs` y los componentes de infraestructura:
 
-| Clave en appsettings | Variable de entorno (Railway / OS) | Descripción | Obligatoria | Origen recomendado |
-| :--- | :--- | :--- | :--- | :--- |
-| `ConnectionStrings:DefaultConnection` | `ConnectionStrings__DefaultConnection` | Cadena de conexión para la base de datos PostgreSQL (incluye host, puerto, base, usuario y contraseña). | Sí | `user-secrets` / `appsettings.Development.json` (local) o variable de entorno en Railway |
-| `Authentication:SecretForKey` | `Authentication__SecretForKey` | Clave secreta simétrica utilizada para firmar y validar los tokens JWT con algoritmo HMAC SHA-256. Debe tener **al menos 32 caracteres (256 bits)**, de lo contrario la aplicación arroja `InvalidOperationException`. | Sí | `user-secrets` (local) o variable de entorno en Railway |
-| `Authentication:Issuer` | `Authentication__Issuer` | Emisor esperado del token JWT (`ValidIssuer`). `JwtService` valida en el arranque que no esté vacío. En desarrollo suele ser la URL local (ej. `https://localhost:7169`) y en producción el dominio público de la API. | Sí | `appsettings.Development.json` (local) o variable de entorno en Railway |
-| `Authentication:Audience` | `Authentication__Audience` | Audiencia destinataria esperada para el token (`ValidAudience`). En el código base se define como `"Dr.Device"`. `JwtService` valida que no esté vacío. | Sí | `appsettings.json` o variable de entorno en Railway si se desea personalizar |
-| `UserCleanup:IntervalSeconds` | `UserCleanup__IntervalSeconds` | Intervalo en segundos con el que se dispara el trabajo programado de Quartz (`UserCleanupJob`). Debe ser un entero positivo. | No (default: 15 en appsettings, 180 en código) | `appsettings.json` o variable de entorno |
-| `UserCleanup:RetentionDays` | `UserCleanup__RetentionDays` | Antigüedad en días tras la cual se purgan cuentas de usuario no verificadas o expiradas. Debe ser un entero positivo. | No (default: 30) | `appsettings.json` o variable de entorno |
-| `UserCleanup:BatchSize` | `UserCleanup__BatchSize` | Cantidad de registros procesados por lote en cada ejecución de limpieza. Debe ser mayor a 0. | No (default: 100) | `appsettings.json` o variable de entorno |
-| `Logging:LogLevel:Default` | `Logging__LogLevel__Default` | Nivel mínimo de logging general de la aplicación. | No (default: `Information`) | `appsettings.json` |
-| `Logging:LogLevel:Microsoft.AspNetCore` | `Logging__LogLevel__Microsoft.AspNetCore` | Nivel de logging para el framework ASP.NET Core. | No (default: `Warning`) | `appsettings.json` |
-| `AllowedHosts` | `AllowedHosts` | Patrones de host HTTP admitidos por la aplicación. | No (default: `*`) | `appsettings.json` |
+
+| Clave en appsettings                    | Variable de entorno (Railway / OS)        | Descripción                                                                                                                                                                                                            | Obligatoria                                    |
+| :--------------------------------------- | :----------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------- |
+| `ConnectionStrings:DefaultConnection`   | `ConnectionStrings__DefaultConnection`    | Cadena de conexión para la base de datos PostgreSQL (incluye host, puerto, base, usuario y contraseña).                                                                                                                | Sí                                             |
+| `Authentication:SecretForKey`           | `Authentication__SecretForKey`            | Clave secreta simétrica utilizada para firmar y validar los tokens JWT con algoritmo HMAC SHA-256. Debe tener **al menos 32 caracteres (256 bits)**, de lo contrario la aplicación arroja `InvalidOperationException`. | Sí                                             |
+| `Authentication:Issuer`                 | `Authentication__Issuer`                  | Emisor esperado del token JWT (`ValidIssuer`). `JwtService` valida en el arranque que no esté vacío. En desarrollo suele ser la URL local (ej. `https://localhost:7169`) y en producción el dominio público de la API. | Sí                                             |
+| `Authentication:Audience`               | `Authentication__Audience`                | Audiencia destinataria esperada para el token (`ValidAudience`). En el código base se define como `"Dr.Device"`. `JwtService` valida que no esté vacío.                                                                | Sí                                             |
+| `UserCleanup:IntervalSeconds`           | `UserCleanup__IntervalSeconds`            | Intervalo en segundos con el que se dispara el trabajo programado de Quartz (`UserCleanupJob`). Debe ser un entero positivo.                                                                                           | No (default: 15 en appsettings, 180 en código) |
+| `UserCleanup:RetentionDays`             | `UserCleanup__RetentionDays`              | Antigüedad en días tras la cual se purgan cuentas de usuario no verificadas o expiradas. Debe ser un entero positivo.                                                                                                  | No (default: 30)                               |
+| `UserCleanup:BatchSize`                 | `UserCleanup__BatchSize`                  | Cantidad de registros procesados por lote en cada ejecución de limpieza. Debe ser mayor a 0.                                                                                                                           | No (default: 100)                              |
+| `Logging:LogLevel:Default`              | `Logging__LogLevel__Default`              | Nivel mínimo de logging general de la aplicación.                                                                                                                                                                      | No (default: `Information`)                    |
+| `Logging:LogLevel:Microsoft.AspNetCore` | `Logging__LogLevel__Microsoft.AspNetCore` | Nivel de logging para el framework ASP.NET Core.                                                                                                                                                                       | No (default: `Warning`)                        |
+| `AllowedHosts`                          | `AllowedHosts`                            | Patrones de host HTTP admitidos por la aplicación.                                                                                                                                                                     | No (default: `*`)                              |
+
 
 > [!NOTE]
 > Las variables de entorno de infraestructura en Railway como `PORT` son inyectadas automáticamente por la plataforma y consumidas por el `Dockerfile` (`ENV ASPNETCORE_URLS=http://+:${PORT:-8080}`).
@@ -81,10 +78,10 @@ Para evitar almacenar contraseñas y claves privadas en archivos versionados por
 
 ```bash
 # 1. Configurar la clave secreta para la firma de JWT (mínimo 32 caracteres)
-dotnet user-secrets set "Authentication:SecretForKey" "<tu-clave-jwt-segura-de-al-menos-32-caracteres>" --project src/Presentation
+dotnet user-secrets set "Authentication:SecretForKey" "[[ORCA_RICH_MD:48dec2c4b89ba9a10eb5688422d92d14:inline-html:%3Ctu-clave-jwt-segura-de-al-menos-32-caracteres%3E]]" --project src/Presentation
 
 # 2. Configurar la cadena de conexión a PostgreSQL local
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=drdevice;Username=<tu-usuario-postgres>;Password=<tu-password-postgres>" --project src/Presentation
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=drdevice;Username=postgres;Password=postgres" --project src/Presentation
 
 # 3. (Opcional) Configurar el emisor local si no se toma desde appsettings.Development.json
 dotnet user-secrets set "Authentication:Issuer" "https://localhost:7169" --project src/Presentation
@@ -103,7 +100,7 @@ dotnet user-secrets list --project src/Presentation
 ### 1. Clonar el repositorio y restaurar paquetes
 
 ```bash
-git clone <url-del-repositorio>
+git clone [[ORCA_RICH_MD:48dec2c4b89ba9a10eb5688422d92d14:inline-html:%3Curl-del-repositorio%3E]]
 cd dr-device
 dotnet restore dr-device.slnx
 ```
@@ -132,64 +129,7 @@ Ejecutá el proyecto de presentación:
 dotnet run --project src/Presentation
 ```
 
-O utilizando un perfil específico definido en `launchSettings.json`:
-
-```bash
-dotnet run --project src/Presentation --launch-profile https
-```
-
 La consola indicará las URLs en las que el servidor está escuchando (por defecto `http://localhost:5288` y `https://localhost:7176`).
-
-### 5. Documentación OpenAPI y prueba de endpoints
-
-- **Especificación OpenAPI (JSON):** el proyecto incluye el paquete nativo `Microsoft.AspNetCore.OpenApi` y expone el documento de especificación en modo `Development` bajo la ruta:
-  ```text
-  http://localhost:5288/openapi/v1.json
-  ```
-- **Interfaz visual (Swagger UI):** la aplicación no incluye `Swashbuckle.AspNetCore.SwaggerUI` en sus dependencias, por lo que la ruta `/swagger` no está disponible de forma nativa. Podés importar la URL del archivo JSON (`/openapi/v1.json`) en herramientas como Postman, Insomnia o Scalar, o bien utilizar el archivo de solicitudes HTTP integrado en el proyecto: [Presentation.http](file:///src/Presentation/Presentation.http).
-
----
-
-## Deploy en Railway
-
-El proyecto incluye un `Dockerfile` optimizado en dos etapas (compilación en SDK 10 y ejecución en ASP.NET 10 runtime) preparado para Railway.
-
-### Variables requeridas en el servicio de Railway
-
-Dentro del panel de configuración de tu servicio en Railway, en la pestaña **Variables**, debés configurar:
-
-1. **`ASPNETCORE_ENVIRONMENT`:**
-   - Valor: `Production`
-   - **Crítico:** al iniciar con este entorno, el código en `Program.cs` ejecuta automáticamente `dbContext.Database.Migrate()`, aplicando las migraciones pendientes en PostgreSQL. Además, restringe endpoints de prueba como `/api/auth/reset-password`.
-2. **`ConnectionStrings__DefaultConnection`:**
-   - Valor: cadena de conexión apuntando al servicio de PostgreSQL aprovisionado en Railway.
-   - Podés componerla utilizando las variables provistas por el plugin de Postgres en Railway:
-     ```text
-     Host=${{Postgres.PGHOST}};Port=${{Postgres.PGPORT}};Database=${{Postgres.PGDATABASE}};Username=${{Postgres.PGUSER}};Password=${{Postgres.PGPASSWORD}}
-     ```
-3. **`Authentication__SecretForKey`:**
-   - Valor: clave secreta aleatoria de alta entropía (mínimo 32 caracteres).
-4. **`Authentication__Issuer`:**
-   - Valor: URL pública HTTPS asignada a tu servicio en Railway (ejemplo: `https://dr-device-api-production.up.railway.app`).
-5. **`Authentication__Audience`:**
-   - Valor: `Dr.Device` (o el nombre que defina tu frontend).
-
-### Puerto y URL del contenedor
-
-Railway inyecta automáticamente la variable `PORT`. La directiva en el `Dockerfile`:
-```dockerfile
-ENV ASPNETCORE_URLS=http://+:${PORT:-8080}
-```
-se encarga de enlazar Kestrel al puerto dinámico proporcionado sin requerir configuración manual.
-
-### Pipeline de integración y despliegue continuo (CI/CD)
-
-El archivo `.github/workflows/deploy.yml` automatiza la integración y despliegue:
-- En cada `pull_request` a `main` o `dev`, compila y valida la solución en .NET 10.
-- Al fusionar (`push`) cambios en la rama `main`, instala Railway CLI y ejecuta `railway up --service "${{ secrets.RAILWAY_SERVICE }}" --ci --detach`.
-- Requiere tener cargados en los secretos del repositorio de GitHub (`Repository Secrets`):
-  - `RAILWAY_SERVICE`: nombre o ID del servicio en el proyecto de Railway.
-  - `RAILWAY_TOKEN`: token de autenticación generado en Railway.
 
 ---
 
