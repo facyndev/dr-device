@@ -78,7 +78,7 @@ Para evitar almacenar contraseñas y claves privadas en archivos versionados por
 
 ```bash
 # 1. Configurar la clave secreta para la firma de JWT (mínimo 32 caracteres)
-dotnet user-secrets set "Authentication:SecretForKey" "[[ORCA_RICH_MD:48dec2c4b89ba9a10eb5688422d92d14:inline-html:%3Ctu-clave-jwt-segura-de-al-menos-32-caracteres%3E]]" --project src/Presentation
+dotnet user-secrets set "Authentication:SecretForKey" "dr-device-el-mejor-proyecto-del-mundo" --project src/Presentation
 
 # 2. Configurar la cadena de conexión a PostgreSQL local
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=drdevice;Username=postgres;Password=postgres" --project src/Presentation
